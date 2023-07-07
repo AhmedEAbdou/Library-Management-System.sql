@@ -7,4 +7,4 @@ FROM tbl_book_copies AS copies
 INNER JOIN tbl_book AS book ON copies.book_copies_BookID = book.book_BookID
 INNER JOIN tbl_library_branch AS branch ON copies.book_copies_BranchID = branch.library_branch_BranchID
 WHERE book.book_Title = 'The Lost Tribe' AND branch.library_branch_BranchName = 'Sharpstown';
-END; $$ LANGUAGE 'plpgsql';
+

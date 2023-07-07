@@ -1,0 +1,91 @@
+-- 1. How many copies of the book titled "The Lost Tribe" are owned by the library branch whose name is "Sharpstown"?
+CREATE OR REPLACE FUNCTION bookCopiesAtAllSharpstown()
+RETURNS TABLE(Branch_ID INT, Branch_Name varchar, Number_of_Copies INT, Book_Title varchar) AS $$
+BEGIN
+RETURN QUERY
+SELECT copies.book_copies_BranchID, branch.library_branch_BranchName, copies.book_copies_No_Of_Copies, book.book_Title
+FROM tbl_book_copies AS copies
+INNER JOIN tbl_book AS book ON copies.book_copies_BookID = book.book_BookID
+INNER JOIN tbl_library_branch AS branch ON copies.book_copies_BranchID = branch.library_branch_BranchID
+WHERE book.book_Title = 'The Lost Tribe' AND branch.library_branch_BranchName = 'Sharpstown';
+END; $$ LANGUAGE 'plpgsql';
+
+
+-- 2. How many copies of the book titled "The Lost Tribe" are owned by each library branch?
+CREATE OR REPLACE FUNCTION bookCopiesAtAllBranches()
+RETURNS TABLE(Branch_ID INT, Branch_Name varchar, Number_of_Copies INT, Book_Title varchar) AS $$
+BEGIN
+RETURN QUERY
+SELECT copies.book_copies_BranchID, branch.library_branch_BranchName, copies.book_copies_No_Of_Copies, book.book_Title
+FROM tbl_book_copies AS copies
+INNER JOIN tbl_book AS book ON copies.book_copies_BookID = book.book_BookID
+INNER JOIN tbl_library_branch AS branch ON copies.book_copies_BranchID = branch.library_branch_BranchID
+WHERE book.book_Title = 'The Lost Tribe';
+END; $$ LANGUAGE 'plpgsql';
+
+
+-- 3. Retrieve the names of all borrowers who do not have any books checked out.
+CREATE OR REPLACE FUNCTION NoLoans()
+RETURNS TABLE(BorrowerName varchar) AS $$
+BEGIN
+RETURN QUERY
+SELECT borrower_BorrowerName FROM tbl_borrower
+WHERE NOT EXISTS
+    (SELECT * FROM tbl_book_loans
+    WHERE book_loans_CardNo = borrower_CardNo);
+END; $$ LANGUAGE 'plpgsql';
+
+
+-- 4. For each book that is loaned out from the "Sharpstown" branch and whose DueDate is today, retrieve the book title, the borrower's name, and the borrower's address.
+CREATE OR REPLACE FUNCTION LoanersInfo()
+RETURNS TABLE(Branch_Name varchar, Book_Name varchar, Borrower_Name varchar, Borrower_Address varchar, Date_Out varchar, Due_Date varchar) AS $$
+DECLARE
+    _date DATE = CURRENT_DATE;
+BEGIN
+RETURN QUERY
+SELECT Branch.library_branch_BranchName,  Book.book_Title, Borrower.borrower_BorrowerName, Borrower.borrower_BorrowerAddress, Loans.book_loans_DateOut, Loans.book_loans_DueDate
+FROM tbl_book_loans AS Loans
+INNER JOIN tbl_book AS Book ON Loans.book_loans_BookID = Book.book_BookID
+INNER JOIN tbl_borrower AS Borrower ON Loans.book_loans_CardNo = Borrower.borrower_CardNo
+INNER JOIN tbl_library_branch AS Branch ON Loans.book_loans_BranchID = Branch.library_branch_BranchID
+WHERE Loans.book_loans_DueDate = _date AND Branch.library_branch_BranchName = 'Sharpstown';
+END; $$ LANGUAGE 'plpgsql';
+
+
+-- 5. For each library branch, retrieve the branch name and the total number of books loaned out from that branch.
+CREATE OR REPLACE FUNCTION TotalLoansPerBranch()
+RETURNS TABLE(Branch_Name varchar, Total_Loans INT) AS $$
+BEGIN
+RETURN QUERY
+SELECT  Branch.library_branch_BranchName, COUNT (Loans.book_loans_BranchID)
+FROM tbl_book_loans AS Loans
+INNER JOIN tbl_library_branch AS Branch ON Loans.book_loans_BranchID = Branch.library_branch_BranchID
+GROUP BY library_branch_BranchName;
+END; $$ LANGUAGE 'plpgsql';
+
+
+-- 6. Retrieve the names, addresses, and number of books checked out for all borrowers who have more than five books checked out.
+CREATE OR REPLACE FUNCTION BooksLoanedOut()
+RETURNS TABLE(Borrower_Name varchar, Borrower_Address varchar, Books_Checked_Out INT) AS $$
+BEGIN
+RETURN QUERY
+SELECT Borrower.borrower_BorrowerName, Borrower.borrower_BorrowerAddress, COUNT(Borrower.borrower_BorrowerName)
+FROM tbl_book_loans AS Loans
+INNER JOIN tbl_borrower AS Borrower ON Loans.book_loans_CardNo = Borrower.borrower_CardNo
+GROUP BY Borrower.borrower_BorrowerName, Borrower.borrower_BorrowerAddress
+HAVING COUNT(Borrower.borrower_BorrowerName) > 5;
+END; $$ LANGUAGE 'plpgsql';
+
+
+-- 7. For each book authored by "Stephen King", retrieve the title and the number of copies owned by the library branch whose name is "Central".
+CREATE OR REPLACE FUNCTION BookbyAuthorandBranch()
+RETURNS TABLE(Branch_Name varchar, Title varchar, Number_of_Copies INT) AS $$
+BEGIN
+RETURN QUERY
+SELECT Branch.library_branch_BranchName, Book.book_Title, Copies.book_copies_No_Of_Copies
+FROM tbl_book_authors AS Authors
+INNER JOIN tbl_book AS Book ON Authors.book_authors_BookID = Book.book_BookID
+INNER JOIN tbl_book_copies AS Copies ON Authors.book_authors_BookID = Copies.book_copies_BookID
+INNER JOIN tbl_library_branch AS Branch ON Copies.book_copies_BranchID = Branch.library_branch_BranchID
+WHERE Branch.library_branch_BranchName = 'Central' AND Authors.book_authors_AuthorName = 'Stephen King';
+END; $$ LANGUAGE 'plpgsql';

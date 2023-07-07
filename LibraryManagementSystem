@@ -1,3 +1,4 @@
+```sql
 -- 1. How many copies of the book titled "The Lost Tribe" are owned by the library branch whose name is "Sharpstown"?
 CREATE OR REPLACE FUNCTION bookCopiesAtAllSharpstown()
 RETURNS TABLE(Branch_ID INT, Branch_Name varchar, Number_of_Copies INT, Book_Title varchar) AS $$
@@ -89,3 +90,4 @@ INNER JOIN tbl_book_copies AS Copies ON Authors.book_authors_BookID = Copies.boo
 INNER JOIN tbl_library_branch AS Branch ON Copies.book_copies_BranchID = Branch.library_branch_BranchID
 WHERE Branch.library_branch_BranchName = 'Central' AND Authors.book_authors_AuthorName = 'Stephen King';
 END; $$ LANGUAGE 'plpgsql';
+

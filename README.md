@@ -1,5 +1,3 @@
-# Library-Management-System.sql
-
 # Library Management System Database
 This PostgreSQL database, named db_librarymanagement, manages the operations of a library system, including details about books, branches, publishers, authors, borrowers, and loans.
 
